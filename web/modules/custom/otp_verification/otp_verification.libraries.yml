@@ -1,0 +1,8 @@
+otp-verify:
+  version: 1.x
+  js:
+    js/otp.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once

@@ -1,0 +1,8 @@
+roles:
+  author:
+    path: /become-an-author
+    url: /user/register/author
+    redirect_path: /become-an-author
+    hidden: 0
+    form_mode_register: author_registration_form
+    form_mode_edit: default

@@ -1,0 +1,28 @@
+<?php
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * @file
+ * Primary module hooks for OTP Verification module.
+ */
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function otp_verification_form_user_register_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $form['otp_button'] = [
+    '#type' => 'button',
+    '#value' => t('Get OTP'),
+    '#weight' => 5,
+  ];
+  $form['otp'] = [
+    '#type' => 'number',
+    '#title' => t('Enter The OTP'),
+    '#weight' => 4,
+    // '#prefix' => '<div id="otp-wrapper">',
+    // '#suffix' => '</div>',
+  ];
+  $form['#attached']['library'][] = 'otp_verification/otp-verify';
+  return $form;
+}

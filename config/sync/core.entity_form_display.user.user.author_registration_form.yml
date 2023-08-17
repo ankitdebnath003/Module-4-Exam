@@ -1,0 +1,41 @@
+uuid: c0f31835-417c-4e3e-b072-e58da4663019
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_form_mode.user.author_registration_form
+    - field.field.user.user.user_picture
+  module:
+    - path
+    - user
+_core:
+  default_config_hash: FaQ9Ptcpxpg30AtiqRDtl_8zbJArHP1LPfug_s59TOA
+id: user.user.author_registration_form
+targetEntityType: user
+bundle: user
+mode: author_registration_form
+content:
+  account:
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  language:
+    weight: 1
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  path:
+    type: path
+    weight: 3
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  timezone:
+    weight: 2
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  contact: true
+  user_picture: true
