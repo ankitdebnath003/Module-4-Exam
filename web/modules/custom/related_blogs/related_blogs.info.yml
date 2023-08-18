@@ -1,0 +1,5 @@
+name: 'Related blogs'
+type: module
+description: 'Show the related Blogs'
+package: 'Custom Module'
+core_version_requirement: ^10

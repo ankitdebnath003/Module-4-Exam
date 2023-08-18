@@ -1,0 +1,14 @@
+uuid: 545a47fd-4a5f-471f-9ba5-5e65a84ff433
+langcode: en
+status: true
+dependencies:
+  module:
+    - related_blogs
+id: cron.related_blogs
+crontab: '*/15 5 * * *'
+plugin: cron
+type: related_blogs
+configuration: {  }
+provider: related_blogs
+single: false
+weight: 0

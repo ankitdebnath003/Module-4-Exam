@@ -1,0 +1,25 @@
+uuid: 04c5f64c-128b-406e-bab7-0bcb643f66d3
+langcode: en
+status: true
+dependencies:
+  module:
+    - related_blogs
+    - system
+  theme:
+    - olivero
+id: olivero_relatedblogs
+theme: olivero
+region: sidebar
+weight: -7
+provider: null
+plugin: related_blogs
+settings:
+  id: related_blogs
+  label: 'Related Blogs'
+  label_display: visible
+  provider: related_blogs
+visibility:
+  request_path:
+    id: request_path
+    negate: false
+    pages: '/blogs/*'

@@ -5,10 +5,13 @@ dependencies:
   config:
     - field.field.node.blogs.body
     - field.field.node.blogs.field_blogs_tags
+    - field.field.node.blogs.field_like
     - field.field.node.blogs.field_published_date
+    - field.field.node.blogs.likes_count
     - node.type.blogs
   module:
     - datetime
+    - like_dislike
     - text
     - user
 id: node.blogs.default
@@ -21,7 +24,7 @@ content:
     label: hidden
     settings: {  }
     third_party_settings: {  }
-    weight: 101
+    weight: 2
     region: content
   field_blogs_tags:
     type: entity_reference_label
@@ -29,7 +32,16 @@ content:
     settings:
       link: true
     third_party_settings: {  }
-    weight: 102
+    weight: 3
+    region: content
+  field_like:
+    type: like_dislike_formatter
+    label: above
+    settings:
+      likes_label: Like
+      dislikes_label: Dislike
+    third_party_settings: {  }
+    weight: 1
     region: content
   field_published_date:
     type: datetime_default
@@ -38,11 +50,13 @@ content:
       timezone_override: ''
       format_type: html_date
     third_party_settings: {  }
-    weight: 103
+    weight: 4
     region: content
   links:
     settings: {  }
     third_party_settings: {  }
-    weight: 100
+    weight: 0
     region: content
-hidden: {  }
+hidden:
+  likes: true
+  likes_count: true

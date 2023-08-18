@@ -1,0 +1,7 @@
+block.settings.related_blogs:
+  type: block_settings
+  label: 'Related Blogs block'
+  mapping:
+    node_names:
+      type: string
+      label: Node Names

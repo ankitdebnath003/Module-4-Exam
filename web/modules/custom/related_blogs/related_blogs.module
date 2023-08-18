@@ -1,0 +1,58 @@
+<?php
+
+/**
+ * @file
+ * Define hooks for the module.
+ */
+
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\node\Entity\Node;
+
+/**
+ * Implements hook_node_view().
+ */
+function related_blogs_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  if ($entity->bundle() === 'blogs') {
+    Cache::invalidateTags(['related_blogs_tag']);
+  }
+}
+
+/**
+ * Implements hook_cron().
+ */
+function related_blogs_cron() {
+  // Timestamp of 1 year ago.
+  $one_year = strtotime('-1 year');
+
+  // Getting the nodes created a year ago.
+  $query = \Drupal::entityQuery('node')
+    ->condition('type', 'blogs')
+    ->condition('created', $one_year, '<=')
+    ->accessCheck(TRUE);
+
+  // Getting all the users' id of role Guest Blogger.
+  $role = 'guest_blogger';
+  $uids = \Drupal::entityQuery('user')
+    ->condition('roles', $role)
+    ->condition('status', 1)
+    ->accessCheck(TRUE)
+    ->execute();
+
+  // Adding the condition to fetch only those nodes created by guest_bloggers
+  // otherwise return.
+  if (!$uids) {
+    return;
+  }
+  $query->condition('uid', $uids, 'IN');
+
+  // Getting the node ids and delete them.
+  $nids = $query->execute();
+  if ($nids) {
+    $nodes = Node::loadMultiple($nids);
+    foreach ($nodes as $node) {
+      $node->delete();
+    }
+  }
+}

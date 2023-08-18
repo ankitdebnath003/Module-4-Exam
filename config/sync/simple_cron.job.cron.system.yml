@@ -1,0 +1,14 @@
+uuid: 636ee9df-1793-495c-988b-e129c64b0119
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+id: cron.system
+crontab: '*/15 * * * *'
+plugin: cron
+type: system
+configuration: {  }
+provider: system
+single: false
+weight: 0
