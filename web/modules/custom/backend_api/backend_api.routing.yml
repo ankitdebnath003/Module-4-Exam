@@ -5,27 +5,3 @@ backend_api.blogs:
     _controller: '\Drupal\backend_api\Controller\ApiController::getBlogNodes'
   requirements:
     _permission: 'access content'
-
-backend_api.author:
-  path: '/blog-api/blog/author/{author}'
-  defaults:
-    _title: 'Blogs API'
-    _controller: '\Drupal\backend_api\Controller\ApiController::getBlogNodesByAuthor'
-  requirements:
-    _permission: 'access content'
-
-backend_api.tag:
-  path: '/blog-api/blog/tag/{tag}'
-  defaults:
-    _title: 'Blogs API'
-    _controller: '\Drupal\backend_api\Controller\ApiController::getBlogNodesByTag'
-  requirements:
-    _permission: 'access content'
-
-backend_api.date:
-  path: '/blog-api/blog/date/{start}/{end}'
-  defaults:
-    _title: 'Blogs API'
-    _controller: '\Drupal\backend_api\Controller\ApiController::getBlogNodesByDate'
-  requirements:
-    _permission: 'access content'

@@ -24,7 +24,7 @@ function related_blogs_node_view(array &$build, EntityInterface $entity, EntityV
  */
 function related_blogs_cron() {
   // Timestamp of 1 year ago.
-  $one_year = strtotime('-1 year');
+  $one_year = strtotime('-1 hour');
 
   // Getting the nodes created a year ago.
   $query = \Drupal::entityQuery('node')

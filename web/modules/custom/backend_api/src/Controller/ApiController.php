@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\mysql\Driver\Database\mysql\Connection;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * This class is used to create API of Blogs Nodes.
@@ -17,6 +18,20 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  * @package Drupal\backend_api\Controller
  */
 class ApiController extends ControllerBase {
+
+  /**
+   * Stores the instance of Entity Type Manager Interface.
+   *
+   * @var string
+   */
+  protected const AUTHOR_ERROR = 'Invalid Author Name';
+
+  /**
+   * Stores the instance of Entity Type Manager Interface.
+   *
+   * @var string
+   */
+  protected const TAG_ERROR = 'Invalid Tag Name';
 
   /**
    * Stores the instance of Entity Type Manager Interface.
@@ -61,141 +76,73 @@ class ApiController extends ControllerBase {
    * @return \Symfony\Component\HttpFoundation\JsonResponse
    *   Returns the API of Blogs nodes data.
    */
-  public function getBlogNodes() {
+  public function getBlogNodes(Request $request) {
+    $author = $request->get('author');
+    $tag = $request->get('tag');
+    $date = $request->get('date');
+
     $node_details['title'] = 'Blogs Nodes';
     $node_details['data'] = [];
 
-    // Getting all the nodes of Blogs type.
-    $nodes = $this->entityTypeManager->getStorage('node')->loadByProperties(['type' => 'blogs']);
+    $query = $this->entityTypeManager->getStorage('node')->getQuery()
+      ->condition('type', 'blogs')
+      ->accessCheck(FALSE);
+
+    // Checking if author has provided in the url. Then get the nodes of the
+    // author or authors.
+    if ($author) {
+      $author = explode(',', $author);
+      $user = $this->entityTypeManager->getStorage('user')->getQuery()
+        ->condition('name', $author, 'IN')
+        ->condition('status', 1)
+        ->accessCheck(FALSE)
+        ->execute();
+
+      if (!$user) {
+        return new JsonResponse(['error' => self::AUTHOR_ERROR], 401);
+      }
+      $query->condition('uid', $user, 'IN');
+    }
+
+    // Checking if tag has provided in the url. Then get the nodes of the tag
+    // or tags.
+    if ($tag) {
+      $tag = explode(',', $tag);
+      $term = $this->entityTypeManager->getStorage('taxonomy_term')->loadByProperties(['name' => $tag]);
+      $term_id = [];
+      foreach ($term as $id => $value) {
+        $term_id[] = $id;
+      }
+      if (!$term_id) {
+        return new JsonResponse(['error' => self::TAG_ERROR], 401);
+      }
+      $query->condition('field_blogs_tags', $term_id, 'IN');
+    }
+
+    // Checking if date has provided in the url. Then get the nodes between the
+    // date range.
+    if ($date) {
+      $date = explode(',', $date);
+      $start = $date[0];
+      $end = $date[1];
+      $query->condition('field_published_date', $start, '>=');
+      $query->condition('field_published_date', $end, '<=');
+    }
+
+    // Getting the node ids.
+    $results = $query->execute();
+
+    // Getting all the node details.
+    $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple($results);
     foreach ($nodes as $node) {
       $node_details['data'][] = $this->getApiDetails($node);
     }
 
-    return new JsonResponse($node_details);
-  }
-
-  /**
-   * This function is used to get the nodes of the date range given in the url.
-   *
-   * Sorting the Blogs nodes and getting only the nodes which one is between the
-   * start and end date range.
-   *
-   * @param string $start
-   *   Stores the start date given in the url.
-   * @param string $end
-   *   Stores the end date given in the url.
-   *
-   * @return \Symfony\Component\HttpFoundation\JsonResponse
-   *   Returns the API of Blogs node data.
-   */
-  public function getBlogNodesByDate(string $start, string $end) {
-    // Fetching the node ids from database that is between the given date range.
-    $nodes = $this->connection->select('node__field_published_date', 'n')
-      ->fields('n', ['entity_id'])
-      ->condition('field_published_date_value', $start, '>=')
-      ->condition('field_published_date_value', $end, '<=')
-      ->execute()
-      ->fetchAll();
-
-    if (!$nodes) {
-      return new JsonResponse(['data' => 'No Nodes Found In This Date Range'], 401);
+    // If no nodes found then the message will be shown.
+    if (!$node_details['data']) {
+      $node_details['data'] = 'No Nodes Found';
     }
 
-    // Getting all the details of the API.
-    $node_details['title'] = 'Blogs Nodes From ' . $start . ' To ' . $end;
-    $node_details['data'] = [];
-    foreach ($nodes as $node) {
-      $node_detail = $this->entityTypeManager->getStorage('node')->load($node->entity_id);
-      $node_details['data'][] = $this->getApiDetails($node_detail);
-    }
-    return new JsonResponse($node_details);
-  }
-
-  /**
-   * This function is used to get the node details of the user given in the url.
-   *
-   * Sorting the Blogs nodes and getting only the nodes which one this user has
-   * created and then getting the data of the nodes.
-   *
-   * @param string $author
-   *   Stores the author name given in the url.
-   *
-   * @return \Symfony\Component\HttpFoundation\JsonResponse
-   *   Returns the API of Blogs node data.
-   */
-  public function getBlogNodesByAuthor(string $author) {
-    $user = $this->entityTypeManager->getStorage('user')->loadByProperties(['name' => $author]);
-    if (!$user) {
-      return new JsonResponse(['error' => 'Username Not Found'], 401);
-    }
-    foreach ($user as $id => $user_details) {
-      $uid = $id;
-      $name = $user_details->name->value;
-    }
-
-    // Getting all the node ids.
-    $nodes = $this->connection->select('node_field_data', 'n')
-      ->fields('n', ['nid'])
-      ->condition('uid', $uid)
-      ->execute()
-      ->fetchAll();
-
-    if (!$nodes) {
-      return new JsonResponse(['data' => 'No Nodes Found Of This User'], 401);
-    }
-
-    // Getting all the details of the API.
-    $node_details['title'] = 'Blogs Nodes of Author : ' . $name;
-    $node_details['data'] = [];
-    foreach ($nodes as $node) {
-      $node_detail = $this->entityTypeManager->getStorage('node')->load($node->nid);
-      $node_details['data'][] = $this->getApiDetails($node_detail);
-    }
-    return new JsonResponse($node_details);
-  }
-
-  /**
-   * This function is used to get the node details of the tag given in the url.
-   *
-   * Sorting the Blogs nodes and getting only the nodes which one uses the given
-   * tag.
-   *
-   * @param string $tag
-   *   Stores the tag name given in the url.
-   *
-   * @return \Symfony\Component\HttpFoundation\JsonResponse
-   *   Returns the API of Blogs node data.
-   */
-  public function getBlogNodesByTag(string $tag) {
-    $term = $this->entityTypeManager->getStorage('taxonomy_term')->loadByProperties(['name' => $tag]);
-    if (!$term) {
-      return new JsonResponse(['error' => 'Term Not Found'], 401);
-    }
-
-    // Getting the term name and id.
-    foreach ($term as $id => $term_details) {
-      $tid = $id;
-      $name = $term_details->name->value;
-    }
-
-    // Getting all the node ids.
-    $nodes = $this->connection->select('taxonomy_index', 'n')
-      ->fields('n', ['nid'])
-      ->condition('tid', $tid)
-      ->execute()
-      ->fetchAll();
-
-    if (!$nodes) {
-      return new JsonResponse(['data' => 'No Nodes Found Of This Tag'], 401);
-    }
-
-    // Getting all the details of the API.
-    $node_details['title'] = 'Blogs Nodes of Tag : ' . $name;
-    $node_details['data'] = [];
-    foreach ($nodes as $node) {
-      $node_detail = $this->entityTypeManager->getStorage('node')->load($node->nid);
-      $node_details['data'][] = $this->getApiDetails($node_detail);
-    }
     return new JsonResponse($node_details);
   }
 
@@ -210,25 +157,12 @@ class ApiController extends ControllerBase {
    */
   public function getApiDetails(object $node) {
     return [
-      'title' => $this->getTitle($node),
+      'title' => $node->getTitle(),
       'body' => $this->getBody($node),
       'Published Date' => $this->getPublishedDate($node),
       'Author' => $this->getAuthorName($node->getOwnerId()),
-      'Tags' => $this->getTagsNames($node->id()),
+      'Tags' => $this->getTagsNames($node->field_blogs_tags->getValue()),
     ];
-  }
-
-  /**
-   * This function is used to get the title of the node.
-   *
-   * @param object $node
-   *   Stores the object of the node.
-   *
-   * @return string
-   *   Returns the title of the node.
-   */
-  public function getTitle(object $node) {
-    return $node->title->value;
   }
 
   /**
@@ -278,24 +212,17 @@ class ApiController extends ControllerBase {
   /**
    * This function is used to get the Taxonomy term names of the node.
    *
-   * @param int $nid
+   * @param array $terms
    *   Stores the node's id.
    *
    * @return string
    *   Returns the terms' names separated by comma.
    */
-  public function getTagsNames(int $nid) {
-    // Getting all the term id's that are associated with the node id.
-    $terms = $this->connection->select('taxonomy_index', 'n')
-      ->fields('n', ['tid'])
-      ->condition('nid', $nid)
-      ->execute()
-      ->fetchAll();
-
+  public function getTagsNames(array $terms) {
     // Getting the taxonomy term names.
     foreach ($terms as $term) {
-      $term_details = $this->entityTypeManager->getStorage('taxonomy_term')->load($term->tid);
-      $term_names[] = $term_details->name->value;
+      $term_details = $this->entityTypeManager->getStorage('taxonomy_term')->load($term['target_id']);
+      $term_names[] = $term_details->label();
     }
     return implode(', ', $term_names);
   }
