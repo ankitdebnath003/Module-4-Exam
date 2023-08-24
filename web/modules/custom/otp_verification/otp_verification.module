@@ -1,0 +1,143 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for OTP Verification module.
+ */
+
+use Drupal\Core\Ajax\AddJsCommand;
+use Drupal\user\Entity\User;
+use Drupal\Core\Ajax\HtmlCommand;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\CssCommand;
+use Drupal\Core\Ajax\InvokeCommand;
+use Drupal\Core\Database\Database;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function otp_verification_form_user_register_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $form_mode = $form_state->getStorage()['form_display']->getMode();
+  if ($form_mode != 'author_registration_form') {
+    unset($form['select_roles']);
+  }
+  else {
+    $form['otp'] = [
+      '#type' => 'number',
+      '#title' => t('Enter The OTP'),
+      '#weight' => 4,
+    ];
+    $form['otp_button'] = [
+      '#type' => 'submit',
+      '#value' => t('Get OTP'),
+      '#weight' => 5,
+      '#ajax' => [
+        'callback' => 'otp_verification_get_otp',
+      ],
+      '#validate' => ['otp_verification_validate'],
+      '#prefix' => '<div id="otp-message"></div>',
+    ];
+    $form['#attached']['library'][] = 'otp_verification/otp-verify';
+    $form['actions']['submit']['#submit'][] = 'otp_verification_remove_role';
+    $form['#validate'][] = 'otp_verification_validate_otp';
+    return $form;
+  }
+}
+
+/**
+ * Custom validator to ignore unnecessary error message.
+ */
+function otp_verification_validate(&$form, FormStateInterface $form_state) {
+}
+
+/**
+ * Remove the author role.
+ */
+function otp_verification_remove_role(&$form, FormStateInterface $form_state) {
+  $uid = $form_state->getValue('uid');
+  $user = User::load($uid);
+  $user->removeRole('author');
+  $user->save();
+}
+
+/**
+ * Sending OTP to the mail.
+ */
+function otp_verification_get_otp(&$form, FormStateInterface $form_state) {
+  $response = new AjaxResponse();
+  $mail = $form_state->getValue('mail');
+  if (!$mail) {
+    $response->addCommand(new HtmlCommand('#otp-message', 'Please Provide Email Address'));
+    $response->addCommand(new CssCommand('#otp-message', ['color' => 'red']));
+  }
+
+  $rand = random_int(100000, 999999);
+  $conn = Database::getConnection();
+  $fields = [
+    'email' => $form_state->getValue('mail'),
+    'otp' => $rand,
+  ];
+
+  $query = $conn->upsert('otp')
+    ->fields($fields)
+    ->key('email')
+    ->execute();
+
+  if ($query) {
+    $mailManager = \Drupal::service('plugin.manager.mail');
+    $module = 'otp_verification';
+    $key = 'otp_verify';
+    $to = $mail;
+    $params['message'] = 'Your OTP is : ' . $rand;
+    $langcode = \Drupal::currentUser()->getPreferredLangcode();
+    $send = TRUE;
+    $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
+    if ($result['result'] !== TRUE) {
+      $response->addCommand(new HtmlCommand('#otp-message', 'Please Check Your Email Address'));
+      $response->addCommand(new CssCommand('#otp-message', ['color' => 'red']));
+    }
+    else {
+      $response->addCommand(new HtmlCommand('#otp-message', 'OTP has been sent to the Email Address🔥'));
+      $response->addCommand(new CssCommand('#otp-message', ['color' => 'green']));
+      $response->addCommand(new InvokeCommand('#edit-otp', 'val', ['']));
+    }
+  }
+
+  return $response;
+}
+
+/**
+ * Implements hook_mail().
+ */
+function otp_verification_mail($key, &$message, $params) {
+  switch ($key) {
+    case 'otp_verify':
+      $message['from'] = \Drupal::config('system.site')->get('mail');
+      $message['subject'] = t('Verify your mail');
+      $message['body'][] = $params['message'];
+      break;
+  }
+}
+
+/**
+ * Validate OTP.
+ */
+function otp_verification_validate_otp(&$form, FormStateInterface $form_state) {
+  $email = $form_state->getValue('mail');
+  $otp = $form_state->getValue('otp');
+
+  $connection = Database::getConnection();
+  $query = $connection->select('otp', 'n');
+  $query->condition('n.email', $email);
+  $query->addField('n', 'otp');
+  $result = $query->execute()->fetchAll();
+
+  if ($result == []) {
+    $form_state->setErrorByName('otp', 'Please Get the OTP');
+  }
+  elseif ($otp !== $result[0]->otp) {
+    $form_state->setErrorByName('otp', 'Please Enter correct OTP');
+  }
+
+}

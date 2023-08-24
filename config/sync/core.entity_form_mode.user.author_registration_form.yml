@@ -1,0 +1,10 @@
+uuid: da4197da-177b-4633-8474-2ca065611f74
+langcode: en
+status: true
+dependencies:
+  module:
+    - user
+id: user.author_registration_form
+label: 'Author Registration Form'
+targetEntityType: user
+cache: true

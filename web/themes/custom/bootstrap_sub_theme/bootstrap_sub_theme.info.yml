@@ -1,0 +1,20 @@
+name: Bootstrap5 Sub Theme
+type: theme
+description: 'Sub Theme with Bootstrap 5 css library'
+core_version_requirement: ^10
+base theme: bootstrap5
+dependencies:
+  - bootstrap5
+regions:
+  header: Header
+  nav_branding: 'Navigation branding region'
+  nav_main: 'Main navigation region'
+  nav_additional: 'Additional navigation region (eg search form, social icons, etc)'
+  breadcrumb: Breadcrumbs
+  featured_top: 'Featured Top'
+  content: 'Main content'
+  sub_content: 'Sub Content'
+  sidebar_first: 'Sidebar first'
+  sidebar_second: 'Sidebar second'
+  featured_bottom: 'Featured Bottom'
+  footer: Footer

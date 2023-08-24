@@ -1,0 +1,31 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function otp_verification_schema() {
+  $schema['otp'] = [
+    'description' => 'OTP verification.',
+    'fields' => [
+      'email' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'Email of the User.',
+      ],
+      'otp' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'OTP of the User.',
+      ],
+    ],
+    'primary key' => ['email'],
+  ];
+
+  return $schema;
+}

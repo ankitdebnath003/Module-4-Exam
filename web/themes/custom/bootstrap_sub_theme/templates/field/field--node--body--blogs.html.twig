@@ -1,0 +1,16 @@
+{{ attach_library('bootstrap_sub_theme/blogs') }}
+<div{{ content_attributes }}>
+  {% set body = items[0].content['#text']|striptags %}
+  <div class="content">
+    {% if body|split(' ')|length > 50 %}
+      <div class="trimmed-content">{{ body|split(' ')|slice(0, 50)|join(' ') ~ '...' }}</div>
+      <div class="full-content" style="display: none;">
+        {{ body }}
+      </div>
+      <a href="#" class="read-more">Read more</a>
+      <a href="#" class="show-less" style="display: none;">Show less</a>
+    {% else %}
+      {{ body }}
+    {% endif %}
+  </div>
+</div>

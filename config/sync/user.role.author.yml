@@ -1,0 +1,25 @@
+uuid: 557328a3-88bd-4daf-b74e-1248689adccc
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.blogs
+  module:
+    - contextual
+    - node
+    - toolbar
+id: author
+label: Author
+weight: 6
+is_admin: null
+permissions:
+  - 'access content overview'
+  - 'access contextual links'
+  - 'access toolbar'
+  - 'access user profiles'
+  - 'create blogs content'
+  - 'delete blogs revisions'
+  - 'delete own blogs content'
+  - 'edit own blogs content'
+  - 'revert blogs revisions'
+  - 'view blogs revisions'

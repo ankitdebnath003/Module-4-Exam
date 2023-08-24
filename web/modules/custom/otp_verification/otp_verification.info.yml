@@ -1,0 +1,5 @@
+name: 'OTP Verification'
+type: module
+description: 'Send OTP to email to verify'
+package: Custom Module
+core_version_requirement: ^10

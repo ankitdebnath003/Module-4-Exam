@@ -1,0 +1,7 @@
+backend_api.blogs:
+  path: '/blog-api/blog'
+  defaults:
+    _title: 'Blogs API'
+    _controller: '\Drupal\backend_api\Controller\ApiController::getBlogNodes'
+  requirements:
+    _permission: 'access content'

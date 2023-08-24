@@ -1,0 +1,5 @@
+name: 'Backend API'
+type: module
+description: 'Create API of Blogs content type'
+package: Custom Module
+core_version_requirement: ^10

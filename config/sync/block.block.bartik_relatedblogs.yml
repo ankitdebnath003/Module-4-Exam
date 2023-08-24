@@ -1,0 +1,25 @@
+uuid: 077bac9b-7a4f-4dd9-8d61-51f4e7704e79
+langcode: en
+status: true
+dependencies:
+  module:
+    - related_blogs
+    - system
+  theme:
+    - bartik
+id: bartik_relatedblogs
+theme: bartik
+region: sidebar_first
+weight: 0
+provider: null
+plugin: related_blogs
+settings:
+  id: related_blogs
+  label: 'Related Blogs'
+  label_display: visible
+  provider: related_blogs
+visibility:
+  request_path:
+    id: request_path
+    negate: false
+    pages: '/blogs/*'
